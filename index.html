@@ -642,8 +642,10 @@ function renderSkills() {
   const pList = document.getElementById("passiveList");
   pList.innerHTML = "";
   PASSIVE_SKILLS.forEach(s => {
+    const isSelected = state.selectedSkill === "p_" + s.key;
     const div = document.createElement("div");
-    div.className = "skill";
+    div.className = "skill" + (isSelected ? " selected" : "");
+    div.dataset.passive = s.key;
     div.innerHTML = `
       <div class="skill-top">
         <div class="skill-name">${s.name}</div>
@@ -651,6 +653,13 @@ function renderSkills() {
       </div>
       <div class="skill-desc">${s.desc}</div>`;
     pList.appendChild(div);
+  });
+  pList.querySelectorAll(".skill").forEach(el => {
+    el.onclick = () => {
+      const key = "p_" + el.dataset.passive;
+      state.selectedSkill = state.selectedSkill === key ? null : key;
+      save(); renderSkills();
+    };
   });
 
   const aList = document.getElementById("activeList");
@@ -704,6 +713,21 @@ function renderSkills() {
       e.stopPropagation();
       castSkill(btn.dataset.cast);
     };
+  });
+}
+
+// Lightweight live update — called every second by the tick loop.
+// Only toggles the cast button's disabled state as MP regenerates;
+// never touches innerHTML or recreates any element, so an in-progress
+// tap on a real touch/gesture device is never interrupted mid-gesture.
+function updateSkillsLive() {
+  document.querySelectorAll("[data-cast]").forEach(btn => {
+    const key = btn.dataset.cast;
+    const s = ACTIVE_SKILLS.find(x => x.key === key);
+    if (!s) return;
+    const canCast = checkSkillUnlock(s) && state.mp >= s.mana;
+    btn.classList.toggle("disabled", !canCast);
+    btn.textContent = canCast ? "Cast " + s.name : "Not enough Mana";
   });
 }
 
@@ -818,6 +842,17 @@ function renderItems() {
   });
 }
 
+// Lightweight live update — called every second by the tick loop.
+// Only toggles the buy button's disabled state as gold changes;
+// never touches innerHTML, so an in-progress tap is never interrupted.
+function updateItemsLive() {
+  document.querySelectorAll("[data-buy]").forEach(btn => {
+    const item = SHOP_ITEMS.find(x => x.key === btn.dataset.buy);
+    if (!item) return;
+    btn.classList.toggle("disabled", state.gold < item.cost);
+  });
+}
+
 function buyItem(key) {
   const item = SHOP_ITEMS.find(x => x.key === key);
   if (!item || state.gold < item.cost) { showToast("Not enough Gold"); return; }
@@ -856,8 +891,12 @@ setInterval(() => {
   try {
     tickRegen();
     renderHeader();
-    renderSkills(); // keep cast-button enabled state fresh as MP regenerates
-    renderItems(); // keep potion Use buttons fresh as HP/MP regenerate
+    // Non-destructive updates only — never rebuild button lists here.
+    // A full innerHTML rebuild every second was recreating buttons out
+    // from under an in-progress tap/gesture, causing taps to silently
+    // miss on real touch/EMG hardware even though the code was correct.
+    updateSkillsLive();
+    updateItemsLive();
 
     if (state.hp / state.hpMax < 0.3 && !state._tenacityFired) {
       state._tenacityFired = true;

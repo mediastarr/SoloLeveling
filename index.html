@@ -23,6 +23,16 @@
   --panel-bg: rgba(8,11,22,0.72);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+/* Neural Band directional navigation moves focus between elements —
+   every interactive element needs tabindex="0" (set in JS below) to be
+   reachable at all, and a clear focus ring so you can see what's
+   currently selected before making the "select" gesture. */
+[tabindex="0"] { outline: none; }
+[tabindex="0"]:focus {
+  outline: 2px solid var(--blue, #5d7fe6);
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(93,127,230,0.55);
+}
 html, body { background: #04050c; overflow: hidden; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -526,7 +536,7 @@ function renderStatus() {
       <div class="stat-cell-name"><svg class="ic" viewBox="0 0 24 24">${def.icon}</svg>${def.label}</div>
       <div class="stat-cell-right">
         <div class="stat-cell-val mono">${state.stats[def.key]}</div>
-        <div class="stat-plus ${state.statPoints>0?'':'disabled'}" data-stat="${def.key}">+</div>
+        <div class="stat-plus ${state.statPoints>0?'':'disabled'}" data-stat="${def.key}" tabindex="0">+</div>
       </div>`;
     list.appendChild(cell);
   });
@@ -561,9 +571,9 @@ function renderQuests() {
     row.innerHTML = `
       <div class="q-name ${isDone?'done':''}">${q.name}</div>
       <div class="q-right">
-        <div class="q-icon-btn q-minus" data-dec="${q.key}">−</div>
+        <div class="q-icon-btn q-minus" data-dec="${q.key}" tabindex="0">−</div>
         <div class="q-frac mono">[${val}/${q.target}${q.unit?q.unit:''}]</div>
-        <div class="q-icon-btn ${isDone?'done':''}" data-inc="${q.key}">${isDone?'✓':'+'}</div>
+        <div class="q-icon-btn ${isDone?'done':''}" data-inc="${q.key}" tabindex="0">${isDone?'✓':'+'}</div>
       </div>`;
     list.appendChild(row);
   });
@@ -642,6 +652,7 @@ function renderSkills() {
     const div = document.createElement("div");
     div.className = "skill" + (isSelected ? " selected" : "");
     div.dataset.passive = s.key;
+    div.setAttribute("tabindex", "0");
     div.innerHTML = `
       <div class="skill-top">
         <div class="skill-name">${s.name}</div>
@@ -670,6 +681,7 @@ function renderSkills() {
     const div = document.createElement("div");
     div.className = "skill" + (isUnlocked ? "" : " locked") + (isSelected ? " selected" : "");
     div.dataset.skill = s.key;
+    if (isUnlocked) div.setAttribute("tabindex", "0");
 
     if (!isUnlocked) {
       div.innerHTML = `
@@ -690,7 +702,7 @@ function renderSkills() {
           <span>MASTERY <b>${mastery}%</b></span>
         </div>
         <div class="mastery-track"><div class="mastery-fill" style="width:${mastery}%"></div></div>
-        ${isSelected ? `<div class="cast-btn ${canCast?'':'disabled'}" data-cast="${s.key}">${canCast ? "Cast " + s.name : "Not enough Mana"}</div>` : ""}
+        ${isSelected ? `<div class="cast-btn ${canCast?'':'disabled'}" data-cast="${s.key}" tabindex="0">${canCast ? "Cast " + s.name : "Not enough Mana"}</div>` : ""}
       `;
     }
     aList.appendChild(div);
@@ -761,7 +773,7 @@ function renderTitles() {
         <div class="title-bonus">${t.bonus}</div>
         ${unlocked ? "" : `<div class="title-req">${t.req}</div>`}
       </div>
-      ${unlocked ? `<div class="equip-btn ${equipped?'':'off'}" data-title="${t.key}">${equipped?"Equipped":"Equip"}</div>` : ""}
+      ${unlocked ? `<div class="equip-btn ${equipped?'':'off'}" data-title="${t.key}" tabindex="0">${equipped?"Equipped":"Equip"}</div>` : ""}
     `;
     list.appendChild(card);
   });
@@ -789,6 +801,7 @@ function renderItems() {
       const slot = document.createElement("div");
       slot.className = "inv-slot filled";
       slot.dataset.use = key;
+      slot.setAttribute("tabindex", "0");
       slot.innerHTML = `<span class="qty mono">${qty}</span>${item.icon}<span class="lbl">${item.name}</span>`;
       invList.appendChild(slot);
     });
@@ -829,7 +842,7 @@ function renderItems() {
           <div class="item-name">${item.name}</div>
           <div class="item-desc">${item.desc}</div>
         </div>
-        <div class="item-btn buy ${canAfford?'':'disabled'}" data-buy="${item.key}">⛁ ${item.cost}</div>`;
+        <div class="item-btn buy ${canAfford?'':'disabled'}" data-buy="${item.key}" tabindex="0">⛁ ${item.cost}</div>`;
     }
     shopList.appendChild(row);
   });
@@ -868,6 +881,21 @@ function useItem(key) {
   const item = SHOP_ITEMS.find(x => x.key === key);
   showToast("Used: " + item.name);
 }
+
+/* ================= FOCUS NAVIGATION: SELECT GESTURE ================= */
+// Neural Band directional navigation moves focus via tabindex, but a
+// plain <div> — unlike a real <button> — does NOT automatically turn
+// Enter/Space into a click. Without this, "navigate down" would reach
+// every button (focus works) but the "select" gesture would do nothing.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const el = document.activeElement;
+  if (!el || el === document.body) return;
+  if (el.hasAttribute("tabindex")) {
+    e.preventDefault();
+    el.click();
+  }
+});
 
 /* ================= TABS ================= */
 document.querySelectorAll(".tab").forEach(tab => {

@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #03040a;
@@ -19,9 +19,9 @@
   --crimson-dim: rgba(255,59,92,0.22);
   --gold: #d4af37;
   --gold-dim: rgba(212,175,55,0.2);
-  --ink: #e8ecf7;
-  --ink-dim: #7c88a8;
-  --line: rgba(79,227,255,0.16);
+  --ink: #f1f4fc;
+  --ink-dim: #98a2c0;
+  --line: rgba(79,227,255,0.18);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { background: var(--bg); overflow: hidden; }
@@ -46,8 +46,8 @@ body {
 #boot.hide { opacity: 0; pointer-events: none; }
 #boot .msg {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 15px; letter-spacing: 0.08em; color: var(--cyan);
-  text-shadow: 0 0 18px rgba(79,227,255,0.7);
+  font-size: 20px; letter-spacing: 0.08em; color: var(--cyan);
+  text-shadow: 0 0 18px rgba(79,227,255,0.7); text-align: center;
   opacity: 0; animation: bootIn 2.4s ease forwards;
 }
 @keyframes bootIn {
@@ -64,32 +64,32 @@ body {
 .head { flex-shrink: 0; }
 .head-row1 { display: flex; align-items: baseline; justify-content: space-between; }
 .rank {
-  font-size: 10px; letter-spacing: 0.14em; color: var(--gold);
-  border: 1px solid var(--gold-dim); border-radius: 999px; padding: 3px 9px;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: var(--gold);
+  border: 1px solid var(--gold-dim); border-radius: 999px; padding: 4px 11px;
   background: var(--gold-dim);
 }
-.lvl { font-size: 22px; font-weight: 700; letter-spacing: 0.02em; }
+.lvl { font-size: 28px; font-weight: 800; letter-spacing: 0.01em; }
 .lvl span { color: var(--cyan); }
-.playername { font-size: 11px; color: var(--ink-dim); text-align: right; }
+.playername { font-size: 13px; color: var(--ink-dim); text-align: right; }
 
-.bar-row { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
-.bar-line { display: flex; align-items: center; gap: 7px; }
-.bar-tag { font-size: 9px; width: 22px; font-weight: 700; letter-spacing: 0.04em; }
+.bar-row { margin-top: 9px; display: flex; flex-direction: column; gap: 6px; }
+.bar-line { display: flex; align-items: center; gap: 8px; }
+.bar-tag { font-size: 12px; width: 30px; font-weight: 800; letter-spacing: 0.03em; }
 .bar-tag.hp { color: var(--crimson); }
 .bar-tag.mp { color: var(--cobalt); }
 .bar-tag.ex { color: var(--gold); }
-.bar-track { flex: 1; height: 7px; border-radius: 4px; background: rgba(255,255,255,0.06); overflow: hidden; position: relative; }
-.bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s cubic-bezier(.2,.8,.2,1); }
+.bar-track { flex: 1; height: 10px; border-radius: 5px; background: rgba(255,255,255,0.07); overflow: hidden; position: relative; }
+.bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s cubic-bezier(.2,.8,.2,1); }
 .bar-fill.hp { background: linear-gradient(90deg, #a3122a, var(--crimson)); box-shadow: 0 0 8px rgba(255,59,92,0.6); }
 .bar-fill.mp { background: linear-gradient(90deg, #16276e, var(--cobalt)); box-shadow: 0 0 8px rgba(41,82,227,0.6); }
 .bar-fill.ex { background: linear-gradient(90deg, #7a611c, var(--gold)); box-shadow: 0 0 8px rgba(212,175,55,0.5); }
-.bar-num { font-size: 9px; width: 52px; text-align: right; color: var(--ink-dim); }
+.bar-num { font-size: 12px; width: 68px; text-align: right; color: var(--ink-dim); }
 
 /* tabs */
-.tabs { display: flex; gap: 6px; margin-top: 12px; flex-shrink: 0; }
+.tabs { display: flex; gap: 6px; margin-top: 13px; flex-shrink: 0; }
 .tab {
-  flex: 1; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
-  padding: 9px 0; border-radius: 10px; border: 1px solid var(--line);
+  flex: 1; text-align: center; font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
+  padding: 10px 0; border-radius: 10px; border: 1px solid var(--line);
   background: rgba(255,255,255,0.02); color: var(--ink-dim);
   touch-action: manipulation; transition: all 0.15s ease; cursor: pointer;
 }
@@ -108,104 +108,119 @@ body {
 /* panel card */
 .panel {
   border: 1px solid var(--line); border-radius: 12px; background: var(--bg-panel);
-  padding: 12px 13px; margin-bottom: 10px;
+  padding: 13px 14px; margin-bottom: 10px;
 }
 .panel-title {
-  font-size: 10px; letter-spacing: 0.1em; color: var(--ink-dim); margin-bottom: 9px;
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.08em; color: var(--ink-dim); margin-bottom: 10px;
   display: flex; justify-content: space-between; align-items: center;
 }
 
 /* ---- STATUS pane ---- */
 .stat-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 2px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding: 10px 2px; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .stat-row:last-child { border-bottom: none; }
-.stat-name { font-size: 13px; font-weight: 500; }
-.stat-name small { color: var(--ink-dim); font-weight: 400; margin-left: 4px; font-size: 10px; }
-.stat-right { display: flex; align-items: center; gap: 10px; }
-.stat-val { font-size: 15px; font-weight: 700; min-width: 22px; text-align: right; }
+.stat-name { font-size: 16px; font-weight: 600; }
+.stat-name small { display: block; color: var(--ink-dim); font-weight: 400; margin-top: 2px; font-size: 12px; }
+.stat-right { display: flex; align-items: center; gap: 12px; }
+.stat-val { font-size: 19px; font-weight: 800; min-width: 28px; text-align: right; }
 .stat-plus {
-  width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--cyan-dim);
-  background: var(--cyan-dim); color: var(--cyan); font-size: 14px; font-weight: 700;
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--cyan-dim);
+  background: var(--cyan-dim); color: var(--cyan); font-size: 19px; font-weight: 700;
   display: flex; align-items: center; justify-content: center; touch-action: manipulation;
 }
 .stat-plus:active { transform: scale(0.9); }
 .stat-plus.disabled { opacity: 0.25; pointer-events: none; }
 .points-banner {
-  font-size: 11px; color: var(--gold); text-align: center; padding: 7px;
+  font-size: 14px; font-weight: 600; color: var(--gold); text-align: center; padding: 9px;
   border: 1px solid var(--gold-dim); border-radius: 8px; background: var(--gold-dim); margin-bottom: 10px;
 }
+.regen-note { font-size: 12.5px; color: var(--ink-dim); line-height: 1.5; }
+.regen-note b { color: var(--cyan); }
 
 /* ---- QUESTS pane ---- */
 .quest {
-  display: flex; align-items: center; gap: 11px; padding: 10px 2px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex; align-items: center; gap: 12px; padding: 11px 2px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .quest:last-child { border-bottom: none; }
 .q-check {
-  width: 26px; height: 26px; border-radius: 7px; border: 1.5px solid var(--cobalt-dim);
+  width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid var(--cobalt-dim);
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  touch-action: manipulation; font-size: 14px; color: transparent; transition: all 0.15s ease;
+  touch-action: manipulation; font-size: 17px; color: transparent; transition: all 0.15s ease;
 }
 .q-check.done { background: var(--cobalt); border-color: var(--cobalt); color: #fff; box-shadow: 0 0 10px rgba(41,82,227,0.6); }
 .q-body { flex: 1; min-width: 0; }
-.q-name { font-size: 13px; font-weight: 500; }
+.q-name { font-size: 16px; font-weight: 600; }
 .q-name.done { color: var(--ink-dim); text-decoration: line-through; }
-.q-sub { font-size: 10px; color: var(--ink-dim); margin-top: 2px; }
-.q-count { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.q-sub { font-size: 12.5px; color: var(--ink-dim); margin-top: 2px; }
+.q-count { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
 .q-btn {
-  width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--line);
-  background: rgba(255,255,255,0.03); color: var(--ink); font-size: 14px;
+  width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--line);
+  background: rgba(255,255,255,0.03); color: var(--ink); font-size: 17px;
   display: flex; align-items: center; justify-content: center; touch-action: manipulation;
 }
 .q-btn:active { background: var(--cyan-dim); }
-.q-num { font-family: 'JetBrains Mono', monospace; font-size: 12px; min-width: 34px; text-align: center; }
+.q-num { font-family: 'JetBrains Mono', monospace; font-size: 15px; min-width: 42px; text-align: center; font-weight: 600; }
 
 .penalty-warn {
-  font-size: 10.5px; color: var(--crimson); text-align: center; padding: 8px;
+  font-size: 13px; font-weight: 500; color: var(--crimson); text-align: center; padding: 10px;
   border: 1px solid var(--crimson-dim); border-radius: 8px; background: var(--crimson-dim);
-  margin-top: 2px; line-height: 1.4;
+  margin-top: 2px; line-height: 1.5;
 }
 
 /* ---- SKILLS pane ---- */
-.skill-section-label { font-size: 9.5px; letter-spacing: 0.1em; color: var(--ink-dim); margin: 4px 2px 7px; }
+.skill-section-label { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: var(--ink-dim); margin: 4px 2px 8px; }
 .skill {
-  padding: 10px 2px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding: 12px 4px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  touch-action: manipulation; cursor: pointer; border-radius: 8px;
+  transition: background 0.15s ease;
 }
 .skill:last-child { border-bottom: none; }
+.skill:active { background: rgba(255,255,255,0.03); }
+.skill.selected { background: var(--cyan-dim); }
+.skill.locked { opacity: 0.42; }
 .skill-top { display: flex; align-items: center; justify-content: space-between; }
-.skill-name { font-size: 13px; font-weight: 600; }
+.skill-name { font-size: 17px; font-weight: 700; }
 .skill-tag {
-  font-size: 8.5px; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 3px 9px; border-radius: 999px;
 }
 .skill-tag.passive { color: var(--cobalt); background: var(--cobalt-dim); border: 1px solid var(--cobalt-dim); }
 .skill-tag.active { color: var(--crimson); background: var(--crimson-dim); border: 1px solid var(--crimson-dim); }
-.skill-desc { font-size: 11px; color: var(--ink-dim); margin-top: 4px; line-height: 1.4; }
-.skill-meta { display: flex; gap: 12px; margin-top: 6px; font-size: 10px; color: var(--ink-dim); }
-.skill-meta b { color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
-.mastery-track { height: 4px; border-radius: 3px; background: rgba(255,255,255,0.06); margin-top: 6px; overflow: hidden; }
-.mastery-fill { height: 100%; background: var(--cyan); border-radius: 3px; }
+.skill-desc { font-size: 13.5px; color: var(--ink-dim); margin-top: 5px; line-height: 1.5; }
+.skill-meta { display: flex; gap: 16px; margin-top: 8px; font-size: 13px; color: var(--ink-dim); }
+.skill-meta b { color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+.mastery-track { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.07); margin-top: 7px; overflow: hidden; }
+.mastery-fill { height: 100%; background: var(--cyan); border-radius: 3px; transition: width 0.4s ease; }
+.cast-btn {
+  margin-top: 10px; width: 100%; padding: 10px 0; border-radius: 9px; text-align: center;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
+  border: 1px solid var(--crimson-dim); background: var(--crimson-dim); color: var(--crimson);
+  touch-action: manipulation;
+}
+.cast-btn:active { transform: scale(0.98); }
+.cast-btn.disabled { opacity: 0.35; pointer-events: none; border-color: var(--line); background: transparent; color: var(--ink-dim); }
 
 /* ---- TITLES pane ---- */
 .title-card {
-  display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 10px;
-  border: 1px solid var(--line); margin-bottom: 8px; touch-action: manipulation;
+  display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px;
+  border: 1px solid var(--line); margin-bottom: 9px; touch-action: manipulation;
 }
-.title-card.locked { opacity: 0.4; }
+.title-card.locked { opacity: 0.42; }
 .title-card.equipped { border-color: var(--gold-dim); background: var(--gold-dim); }
 .title-icon {
-  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 19px;
   background: rgba(255,255,255,0.04); border: 1px solid var(--line);
 }
 .title-card.equipped .title-icon { border-color: var(--gold-dim); background: var(--gold-dim); }
 .title-info { flex: 1; min-width: 0; }
-.title-name { font-size: 13px; font-weight: 600; }
-.title-bonus { font-size: 10.5px; color: var(--ink-dim); margin-top: 2px; }
-.title-req { font-size: 10px; color: var(--crimson); margin-top: 2px; }
+.title-name { font-size: 16px; font-weight: 700; }
+.title-bonus { font-size: 13px; color: var(--ink-dim); margin-top: 3px; }
+.title-req { font-size: 12.5px; color: var(--crimson); margin-top: 3px; }
 .equip-btn {
-  font-size: 10px; font-weight: 600; padding: 6px 11px; border-radius: 999px; flex-shrink: 0;
+  font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 999px; flex-shrink: 0;
   border: 1px solid var(--gold-dim); color: var(--gold); background: var(--gold-dim);
   touch-action: manipulation;
 }
@@ -213,18 +228,19 @@ body {
 
 /* toast / notification */
 #toast {
-  position: absolute; left: 50%; top: 60px; transform: translateX(-50%);
-  padding: 9px 18px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+  position: absolute; left: 50%; top: 64px; transform: translateX(-50%);
+  padding: 11px 20px; border-radius: 999px; font-size: 14.5px; font-weight: 700;
   background: rgba(7,10,22,0.94); border: 1px solid var(--cyan-dim); color: var(--cyan);
   box-shadow: 0 0 20px rgba(79,227,255,0.35); opacity: 0; pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease; z-index: 200; white-space: nowrap;
+  max-width: 90%; overflow: hidden; text-overflow: ellipsis;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(6px); }
 </style>
 </head>
 <body>
 
-<div id="boot"><div class="msg">[ THE SYSTEM HAS AWAKENED ]</div></div>
+<div id="boot"><div class="msg">[ THE SYSTEM<br>HAS AWAKENED ]</div></div>
 
 <div class="shell">
 
@@ -233,7 +249,7 @@ body {
       <div><span class="rank" id="rankBadge">E-RANK</span></div>
       <div class="playername">PLAYER</div>
     </div>
-    <div class="lvl mono" style="margin-top:6px;">LV. <span id="lvlNum">1</span></div>
+    <div class="lvl mono" style="margin-top:7px;">LV. <span id="lvlNum">1</span></div>
 
     <div class="bar-row">
       <div class="bar-line">
@@ -271,8 +287,12 @@ body {
         <div id="statList"></div>
       </div>
       <div class="panel">
+        <div class="panel-title">RECOVERY</div>
+        <div class="regen-note">HP and MP regenerate automatically over time. Higher <b>VIT</b> speeds HP recovery; higher <b>INT</b> speeds MP recovery. Both fully restore on a new day.</div>
+      </div>
+      <div class="panel">
         <div class="panel-title">EQUIPPED TITLE</div>
-        <div id="equippedTitleBlock" style="font-size:13px; color: var(--ink-dim);">None equipped</div>
+        <div id="equippedTitleBlock" style="font-size:15px; color: var(--ink-dim);">None equipped</div>
       </div>
     </div>
 
@@ -297,7 +317,7 @@ body {
         <div id="passiveList"></div>
       </div>
       <div class="panel">
-        <div class="skill-section-label">ACTIVE — manual trigger, drains Mana</div>
+        <div class="skill-section-label">ACTIVE — tap to select, cast to use</div>
         <div id="activeList"></div>
       </div>
     </div>
@@ -314,13 +334,13 @@ body {
 
 <script>
 /* ================= STATE ================= */
-const STORAGE_KEY = "systemState_v1";
+const STORAGE_KEY = "systemState_v2";
 
 const STAT_DEFS = [
   { key: "str", label: "Strength", tag: "Physical power output" },
-  { key: "vit", label: "Vitality",  tag: "Max HP capacity" },
+  { key: "vit", label: "Vitality",  tag: "Max HP + recovery speed" },
   { key: "agi", label: "Agility",   tag: "Speed & reflex" },
-  { key: "int", label: "Intelligence", tag: "Max MP capacity" },
+  { key: "int", label: "Intelligence", tag: "Max MP + recovery speed" },
   { key: "per", label: "Perception", tag: "Detection & precision" }
 ];
 
@@ -332,15 +352,15 @@ const DAILY_QUESTS = [
 ];
 
 const PASSIVE_SKILLS = [
-  { key: "recover", name: "Will to Recover", desc: "Gradually regenerates injury while resting. Levels up the more consistently you rest and eat well.", uses: 0 },
-  { key: "immunity", name: "Kandiaru's Blessing", desc: "Resistance to illness builds automatically with consistent sleep and hydration habits.", uses: 0 },
-  { key: "tenacity", name: "Tenacity", desc: "Triggers when HP drops below 30% — a reminder to rest before you break down.", uses: 0 }
+  { key: "recover", name: "Will to Recover", desc: "Gradually regenerates injury while resting. Levels up the more consistently you rest and eat well." },
+  { key: "immunity", name: "Kandiaru's Blessing", desc: "Resistance to illness builds automatically with consistent sleep and hydration habits." },
+  { key: "tenacity", name: "Tenacity", desc: "Triggers when HP drops below 30% — a reminder to rest before you break down." }
 ];
 
 const ACTIVE_SKILLS = [
-  { key: "sprint", name: "Sprint", desc: "Unlocked through repeated running quests. Track a run to gain mastery.", mana: 15, uses: 0, unlockAt: 5 },
-  { key: "stealth", name: "Stealth", desc: "Unlocked by completing 7 consecutive Daily Quests without a miss.", mana: 20, uses: 0, unlockAt: 7 },
-  { key: "quicksilver", name: "Quicksilver", desc: "Unlocked at Level 10. A short burst of extreme focus and speed.", mana: 30, uses: 0, unlockAt: 10 }
+  { key: "sprint", name: "Sprint", desc: "Unlocked through repeated running quests. Casting costs Mana and adds mastery.", mana: 15 },
+  { key: "stealth", name: "Stealth", desc: "Unlocked by completing 7 consecutive Daily Quests without a miss.", mana: 20 },
+  { key: "quicksilver", name: "Quicksilver", desc: "Unlocked at Level 10. A short burst of extreme focus and speed.", mana: 30 }
 ];
 
 const TITLES = [
@@ -360,7 +380,8 @@ function defaultState() {
     hp: 100, hpMax: 100, mp: 100, mpMax: 100,
     statPoints: 3, stats,
     questDate: todayKey(), quests, questsCompletedTotal: 0, questStreak: 0,
-    skillUses: {}, equippedTitle: null
+    skillUses: {}, equippedTitle: null, selectedSkill: null,
+    lastTick: Date.now()
   };
 }
 
@@ -371,12 +392,16 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
     const s = JSON.parse(raw);
+    if (s.lastTick === undefined) s.lastTick = Date.now();
     if (s.questDate !== todayKey()) {
-      // New day — check if yesterday's quests were all done
+      // New day — full rest: HP/MP restore, quests reset
       const allDone = DAILY_QUESTS.every(q => (s.quests[q.key]||0) >= q.target);
       if (!allDone) { s.questStreak = 0; }
       DAILY_QUESTS.forEach(q => s.quests[q.key] = 0);
       s.questDate = todayKey();
+      s.hp = s.hpMax;
+      s.mp = s.mpMax;
+      s._streakCountedToday = false;
     }
     return s;
   } catch(e) { return defaultState(); }
@@ -395,13 +420,31 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
 }
 
+/* ================= HP/MP LIVE REGEN ================= */
+// Recovery speed scales with VIT (HP) and INT (MP). Base: full bar in ~10 min at stat 10,
+// faster with higher stats. Runs every second while the app is open.
+function tickRegen() {
+  const now = Date.now();
+  const elapsedSec = Math.max(0, (now - state.lastTick) / 1000);
+  state.lastTick = now;
+  if (elapsedSec <= 0 || elapsedSec > 300) return; // ignore huge gaps (app was closed)
+
+  const hpRatePerSec = (state.hpMax / 600) * (state.stats.vit / 10);
+  const mpRatePerSec = (state.mpMax / 600) * (state.stats.int / 10);
+
+  if (state.hp < state.hpMax) state.hp = Math.min(state.hpMax, state.hp + hpRatePerSec * elapsedSec);
+  if (state.mp < state.mpMax) state.mp = Math.min(state.mpMax, state.mp + mpRatePerSec * elapsedSec);
+}
+
 /* ================= RENDER: HEADER ================= */
 function renderHeader() {
   document.getElementById("lvlNum").textContent = state.level;
-  document.getElementById("hpFill").style.width = (state.hp/state.hpMax*100) + "%";
-  document.getElementById("hpNum").textContent = state.hp + "/" + state.hpMax;
-  document.getElementById("mpFill").style.width = (state.mp/state.mpMax*100) + "%";
-  document.getElementById("mpNum").textContent = state.mp + "/" + state.mpMax;
+  const hpDisp = Math.round(state.hp);
+  const mpDisp = Math.round(state.mp);
+  document.getElementById("hpFill").style.width = (hpDisp/state.hpMax*100) + "%";
+  document.getElementById("hpNum").textContent = hpDisp + "/" + state.hpMax;
+  document.getElementById("mpFill").style.width = (mpDisp/state.mpMax*100) + "%";
+  document.getElementById("mpNum").textContent = mpDisp + "/" + state.mpMax;
   document.getElementById("exFill").style.width = (state.exp/state.expToNext*100) + "%";
   document.getElementById("exNum").textContent = state.exp + "/" + state.expToNext;
 
@@ -446,7 +489,7 @@ function renderStatus() {
   const eq = document.getElementById("equippedTitleBlock");
   if (state.equippedTitle) {
     const t = TITLES.find(x => x.key === state.equippedTitle);
-    eq.innerHTML = `<div style="color:var(--gold); font-weight:600; font-size:13px;">${t.name}</div><div style="font-size:11px; color:var(--ink-dim); margin-top:3px;">${t.bonus}</div>`;
+    eq.innerHTML = `<div style="color:var(--gold); font-weight:700; font-size:16px;">${t.name}</div><div style="font-size:13px; color:var(--ink-dim); margin-top:4px;">${t.bonus}</div>`;
   } else {
     eq.textContent = "None equipped — visit Titles tab";
   }
@@ -499,20 +542,18 @@ function adjustQuest(key, delta) {
     grantEXP(15);
     state.questsCompletedTotal++;
     showToast("Quest complete: " + q.name + " (+15 EXP)");
-    if (key === "run") bumpSkillUse("sprint");
   }
   const allDone = DAILY_QUESTS.every(x => (state.quests[x.key]||0) >= x.target);
-  if (allDone) {
-    const alreadyCounted = state._streakCountedToday;
-    if (!alreadyCounted) {
-      state.questStreak++;
-      state._streakCountedToday = true;
-      showToast("Daily Quest cleared — streak: " + state.questStreak);
-    }
+  if (allDone && !state._streakCountedToday) {
+    state.questStreak++;
+    state._streakCountedToday = true;
+    showToast("Daily Quest cleared — streak: " + state.questStreak);
   }
   save();
   renderQuests();
   renderHeader();
+  renderSkills();
+  renderTitles();
 }
 
 /* ================= EXP / LEVEL ================= */
@@ -534,12 +575,6 @@ function grantEXP(amount) {
 }
 
 /* ================= SKILLS ================= */
-function bumpSkillUse(key) {
-  state.skillUses[key] = (state.skillUses[key]||0) + 1;
-  save();
-  renderSkills();
-}
-
 function renderSkills() {
   const pList = document.getElementById("passiveList");
   pList.innerHTML = "";
@@ -559,13 +594,16 @@ function renderSkills() {
   aList.innerHTML = "";
   ACTIVE_SKILLS.forEach(s => {
     const uses = state.skillUses[s.key] || 0;
-    const unlocked = uses >= 0 && (s.key === "sprint" ? state.quests.run >= 1 || uses > 0 : true) && state.level >= (s.key === "quicksilver" ? 10 : 1);
     const isUnlocked = checkSkillUnlock(s);
     const mastery = Math.min(100, uses * 8);
+    const isSelected = state.selectedSkill === s.key;
+    const canCast = isUnlocked && state.mp >= s.mana;
+
     const div = document.createElement("div");
-    div.className = "skill";
+    div.className = "skill" + (isUnlocked ? "" : " locked") + (isSelected ? " selected" : "");
+    div.dataset.skill = s.key;
+
     if (!isUnlocked) {
-      div.style.opacity = "0.4";
       div.innerHTML = `
         <div class="skill-top">
           <div class="skill-name">${s.name}</div>
@@ -583,10 +621,39 @@ function renderSkills() {
           <span>USES <b>${uses}</b></span>
           <span>MASTERY <b>${mastery}%</b></span>
         </div>
-        <div class="mastery-track"><div class="mastery-fill" style="width:${mastery}%"></div></div>`;
+        <div class="mastery-track"><div class="mastery-fill" style="width:${mastery}%"></div></div>
+        ${isSelected ? `<div class="cast-btn ${canCast?'':'disabled'}" data-cast="${s.key}">${canCast ? "Cast " + s.name : "Not enough Mana"}</div>` : ""}
+      `;
     }
     aList.appendChild(div);
   });
+
+  aList.querySelectorAll(".skill:not(.locked)").forEach(el => {
+    el.onclick = (e) => {
+      if (e.target.closest(".cast-btn")) return;
+      const key = el.dataset.skill;
+      state.selectedSkill = state.selectedSkill === key ? null : key;
+      save(); renderSkills();
+    };
+  });
+  aList.querySelectorAll("[data-cast]").forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      castSkill(btn.dataset.cast);
+    };
+  });
+}
+
+function castSkill(key) {
+  const s = ACTIVE_SKILLS.find(x => x.key === key);
+  if (!s || state.mp < s.mana) { showToast("Not enough Mana"); return; }
+  state.mp -= s.mana;
+  state.skillUses[key] = (state.skillUses[key] || 0) + 1;
+  save();
+  renderHeader();
+  renderSkills();
+  const mastery = Math.min(100, state.skillUses[key] * 8);
+  showToast(s.name + " cast — mastery " + mastery + "%");
 }
 
 function checkSkillUnlock(s) {
@@ -639,14 +706,20 @@ document.querySelectorAll(".tab").forEach(tab => {
   };
 });
 
-/* ================= EMERGENCY HEAL WATCHER ================= */
+/* ================= EMERGENCY / LIVE TICK LOOP ================= */
 setInterval(() => {
+  tickRegen();
+  renderHeader();
+  renderSkills(); // keep cast-button enabled state fresh as MP regenerates
+
   if (state.hp / state.hpMax < 0.3 && !state._tenacityFired) {
     state._tenacityFired = true;
-    showToast("Tenacity triggered — incoming damage reduced");
+    showToast("Tenacity triggered — resting recommended");
   }
   if (state.hp / state.hpMax >= 0.3) state._tenacityFired = false;
-}, 3000);
+
+  save();
+}, 1000);
 
 /* ================= INIT ================= */
 function renderAll() {

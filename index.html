@@ -438,6 +438,17 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
     const s = JSON.parse(raw);
+
+    // Backfill any fields missing from an older saved version — this file
+    // gets updated over time, and an existing save shouldn't ever crash
+    // just because it predates a newer field being added.
+    const fallback = defaultState();
+    Object.keys(fallback).forEach(key => {
+      if (s[key] === undefined || s[key] === null) s[key] = fallback[key];
+    });
+    STAT_DEFS.forEach(def => { if (s.stats[def.key] === undefined) s.stats[def.key] = fallback.stats[def.key]; });
+    DAILY_QUESTS.forEach(q => { if (s.quests[q.key] === undefined) s.quests[q.key] = 0; });
+
     if (s.lastTick === undefined) s.lastTick = Date.now();
     if (s.questDate !== todayKey()) {
       // New day — full rest: HP/MP restore, quests reset

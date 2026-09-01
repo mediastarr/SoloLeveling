@@ -454,7 +454,7 @@ function loadState() {
 }
 
 let state = loadState();
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} }
 
 /* ================= TOAST ================= */
 let toastTimer = null;
@@ -842,18 +842,20 @@ document.querySelectorAll(".tab").forEach(tab => {
 
 /* ================= EMERGENCY / LIVE TICK LOOP ================= */
 setInterval(() => {
-  tickRegen();
-  renderHeader();
-  renderSkills(); // keep cast-button enabled state fresh as MP regenerates
-  renderItems(); // keep potion Use buttons fresh as HP/MP regenerate
+  try {
+    tickRegen();
+    renderHeader();
+    renderSkills(); // keep cast-button enabled state fresh as MP regenerates
+    renderItems(); // keep potion Use buttons fresh as HP/MP regenerate
 
-  if (state.hp / state.hpMax < 0.3 && !state._tenacityFired) {
-    state._tenacityFired = true;
-    showToast("Tenacity triggered — resting recommended");
-  }
-  if (state.hp / state.hpMax >= 0.3) state._tenacityFired = false;
+    if (state.hp / state.hpMax < 0.3 && !state._tenacityFired) {
+      state._tenacityFired = true;
+      showToast("Tenacity triggered — resting recommended");
+    }
+    if (state.hp / state.hpMax >= 0.3) state._tenacityFired = false;
 
-  save();
+    save();
+  } catch(e) {}
 }, 1000);
 
 /* ================= INIT ================= */
@@ -865,10 +867,21 @@ function renderAll() {
   renderTitles();
   renderItems();
 }
-renderAll();
 
-setTimeout(() => document.getElementById("boot").classList.add("hide"), 2400);
-setTimeout(() => document.getElementById("boot").remove(), 3200);
+// Boot removal is scheduled FIRST and unconditionally, so a render error
+// can never leave the black overlay stuck forever — content behind it
+// (or a visible error) will always become reachable on schedule.
+setTimeout(() => { const b = document.getElementById("boot"); if (b) b.classList.add("hide"); }, 2400);
+setTimeout(() => { const b = document.getElementById("boot"); if (b) b.remove(); }, 3200);
+
+try {
+  renderAll();
+} catch (err) {
+  const shell = document.querySelector(".shell");
+  if (shell) {
+    shell.innerHTML = '<div style="padding:40px 20px; text-align:center; font-family:monospace; color:#ff3b5c; font-size:14px; line-height:1.6;">SYSTEM ERROR<br><br>' + String(err && err.message ? err.message : err) + '</div>';
+  }
+}
 </script>
 </body>
 </html>

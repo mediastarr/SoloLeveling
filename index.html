@@ -86,9 +86,9 @@ body {
 .bar-num { font-size: 12px; width: 68px; text-align: right; color: var(--ink-dim); }
 
 /* tabs */
-.tabs { display: flex; gap: 6px; margin-top: 13px; flex-shrink: 0; }
+.tabs { display: flex; gap: 5px; margin-top: 13px; flex-shrink: 0; }
 .tab {
-  flex: 1; text-align: center; font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
+  flex: 1; text-align: center; font-size: 12.5px; font-weight: 700; letter-spacing: 0.01em;
   padding: 10px 0; border-radius: 10px; border: 1px solid var(--line);
   background: rgba(255,255,255,0.02); color: var(--ink-dim);
   touch-action: manipulation; transition: all 0.15s ease; cursor: pointer;
@@ -99,7 +99,7 @@ body {
 }
 
 /* body */
-.body { flex: 1; min-height: 0; margin-top: 12px; overflow-y: auto; padding-right: 2px; }
+.body { flex: 1; min-height: 0; margin-top: 12px; overflow-y: auto; padding-right: 2px; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
 .body::-webkit-scrollbar { width: 3px; }
 .body::-webkit-scrollbar-thumb { background: var(--cobalt-dim); border-radius: 3px; }
 .pane { display: none; }
@@ -226,6 +226,30 @@ body {
 }
 .equip-btn.off { border-color: var(--line); color: var(--ink-dim); background: transparent; }
 
+/* ---- ITEMS pane ---- */
+.item-row {
+  display: flex; align-items: center; gap: 12px; padding: 11px 2px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.item-row:last-child { border-bottom: none; }
+.item-icon {
+  width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--line);
+}
+.item-info { flex: 1; min-width: 0; }
+.item-name { font-size: 15px; font-weight: 600; }
+.item-desc { font-size: 12.5px; color: var(--ink-dim); margin-top: 2px; }
+.item-qty { font-size: 13px; color: var(--cyan); font-weight: 700; margin-top: 2px; }
+.item-btn {
+  font-size: 13px; font-weight: 700; padding: 8px 13px; border-radius: 999px; flex-shrink: 0;
+  border: 1px solid var(--cyan-dim); color: var(--cyan); background: var(--cyan-dim);
+  touch-action: manipulation;
+}
+.item-btn.buy { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-dim); }
+.item-btn.disabled { opacity: 0.35; pointer-events: none; border-color: var(--line); color: var(--ink-dim); background: transparent; }
+.empty-note { font-size: 13.5px; color: var(--ink-dim); padding: 6px 2px; }
+
 /* toast / notification */
 #toast {
   position: absolute; left: 50%; top: 64px; transform: translateX(-50%);
@@ -247,7 +271,7 @@ body {
   <div class="head">
     <div class="head-row1">
       <div><span class="rank" id="rankBadge">E-RANK</span></div>
-      <div class="playername">PLAYER</div>
+      <div class="playername mono" style="color: var(--gold); font-weight:700;">⛁ <span id="goldNum">0</span></div>
     </div>
     <div class="lvl mono" style="margin-top:7px;">LV. <span id="lvlNum">1</span></div>
 
@@ -275,6 +299,7 @@ body {
     <div class="tab" data-pane="quests">Quests</div>
     <div class="tab" data-pane="skills">Skills</div>
     <div class="tab" data-pane="titles">Titles</div>
+    <div class="tab" data-pane="items">Items</div>
   </div>
 
   <div class="body">
@@ -327,6 +352,21 @@ body {
       <div id="titleList"></div>
     </div>
 
+    <!-- ITEMS -->
+    <div class="pane" id="pane-items">
+      <div class="panel">
+        <div class="panel-title">INVENTORY</div>
+        <div id="inventoryList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">
+          <span>SHOP</span>
+          <span class="mono" style="color:var(--gold);">⛁ <span id="shopGoldNum">0</span></span>
+        </div>
+        <div id="shopList"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -370,6 +410,13 @@ const TITLES = [
   { key: "shadowmonarch", name: "Monarch of Shadows", bonus: "+15 all stats", req: "Reach Level 10", reqLevel: 10 }
 ];
 
+const SHOP_ITEMS = [
+  { key: "hpotion", icon: "🧪", name: "Health Potion", desc: "Instantly restores 50 HP", cost: 40, minLevel: 1 },
+  { key: "mpotion", icon: "💠", name: "Mana Potion", desc: "Instantly restores 50 MP", cost: 40, minLevel: 1 },
+  { key: "elixir", icon: "✨", name: "Elixir of Life", desc: "Fully restores HP and MP", cost: 150, minLevel: 3 },
+  { key: "expscroll", icon: "📜", name: "EXP Scroll", desc: "Grants 30 bonus EXP", cost: 100, minLevel: 5 }
+];
+
 function defaultState() {
   const stats = {};
   STAT_DEFS.forEach(s => stats[s.key] = 10);
@@ -381,7 +428,7 @@ function defaultState() {
     statPoints: 3, stats,
     questDate: todayKey(), quests, questsCompletedTotal: 0, questStreak: 0,
     skillUses: {}, equippedTitle: null, selectedSkill: null,
-    lastTick: Date.now()
+    lastTick: Date.now(), gold: 0, inventory: {}
   };
 }
 
@@ -450,6 +497,10 @@ function renderHeader() {
 
   const rank = state.level >= 10 ? "S-RANK" : state.level >= 7 ? "A-RANK" : state.level >= 4 ? "C-RANK" : "E-RANK";
   document.getElementById("rankBadge").textContent = rank;
+
+  document.getElementById("goldNum").textContent = state.gold;
+  const shopGoldEl = document.getElementById("shopGoldNum");
+  if (shopGoldEl) shopGoldEl.textContent = state.gold;
 }
 
 /* ================= RENDER: STATUS ================= */
@@ -540,8 +591,9 @@ function adjustQuest(key, delta) {
 
   if (!wasDone && nowDone) {
     grantEXP(15);
+    state.gold += 20;
     state.questsCompletedTotal++;
-    showToast("Quest complete: " + q.name + " (+15 EXP)");
+    showToast("Quest complete: " + q.name + " (+15 EXP, +20 Gold)");
   }
   const allDone = DAILY_QUESTS.every(x => (state.quests[x.key]||0) >= x.target);
   if (allDone && !state._streakCountedToday) {
@@ -566,7 +618,8 @@ function grantEXP(amount) {
     state.statPoints += 3;
     state.hpMax += 10; state.hp = state.hpMax;
     state.mpMax += 10; state.mp = state.mpMax;
-    showToast("LEVEL UP — now Lv." + state.level);
+    state.gold += 50;
+    showToast("LEVEL UP — now Lv." + state.level + " (+50 Gold)");
   }
   save();
   renderHeader();
@@ -696,6 +749,88 @@ function renderTitles() {
   });
 }
 
+/* ================= ITEMS: INVENTORY + SHOP ================= */
+function renderItems() {
+  const invList = document.getElementById("inventoryList");
+  const owned = Object.entries(state.inventory).filter(([k,v]) => v > 0);
+  if (!owned.length) {
+    invList.innerHTML = `<div class="empty-note">Inventory is empty — buy items from the Shop below.</div>`;
+  } else {
+    invList.innerHTML = "";
+    owned.forEach(([key, qty]) => {
+      const item = SHOP_ITEMS.find(x => x.key === key);
+      if (!item) return;
+      const row = document.createElement("div");
+      row.className = "item-row";
+      row.innerHTML = `
+        <div class="item-icon">${item.icon}</div>
+        <div class="item-info">
+          <div class="item-name">${item.name}</div>
+          <div class="item-desc">${item.desc}</div>
+          <div class="item-qty">Owned: ${qty}</div>
+        </div>
+        <div class="item-btn" data-use="${key}">Use</div>`;
+      invList.appendChild(row);
+    });
+    invList.querySelectorAll("[data-use]").forEach(btn => {
+      btn.onclick = () => useItem(btn.dataset.use);
+    });
+  }
+
+  const shopList = document.getElementById("shopList");
+  shopList.innerHTML = "";
+  SHOP_ITEMS.forEach(item => {
+    const unlocked = state.level >= item.minLevel;
+    const canAfford = state.gold >= item.cost;
+    const row = document.createElement("div");
+    row.className = "item-row";
+    if (!unlocked) {
+      row.style.opacity = "0.42";
+      row.innerHTML = `
+        <div class="item-icon">${item.icon}</div>
+        <div class="item-info">
+          <div class="item-name">${item.name}</div>
+          <div class="item-desc">Unlocks at Level ${item.minLevel}</div>
+        </div>`;
+    } else {
+      row.innerHTML = `
+        <div class="item-icon">${item.icon}</div>
+        <div class="item-info">
+          <div class="item-name">${item.name}</div>
+          <div class="item-desc">${item.desc}</div>
+        </div>
+        <div class="item-btn buy ${canAfford?'':'disabled'}" data-buy="${item.key}">⛁ ${item.cost}</div>`;
+    }
+    shopList.appendChild(row);
+  });
+  shopList.querySelectorAll("[data-buy]").forEach(btn => {
+    btn.onclick = () => buyItem(btn.dataset.buy);
+  });
+}
+
+function buyItem(key) {
+  const item = SHOP_ITEMS.find(x => x.key === key);
+  if (!item || state.gold < item.cost) { showToast("Not enough Gold"); return; }
+  state.gold -= item.cost;
+  state.inventory[key] = (state.inventory[key] || 0) + 1;
+  save();
+  renderHeader(); renderItems();
+  showToast("Purchased: " + item.name);
+}
+
+function useItem(key) {
+  if (!state.inventory[key] || state.inventory[key] <= 0) return;
+  state.inventory[key]--;
+  if (key === "hpotion") state.hp = Math.min(state.hpMax, state.hp + 50);
+  if (key === "mpotion") state.mp = Math.min(state.mpMax, state.mp + 50);
+  if (key === "elixir") { state.hp = state.hpMax; state.mp = state.mpMax; }
+  if (key === "expscroll") grantEXP(30);
+  save();
+  renderHeader(); renderItems();
+  const item = SHOP_ITEMS.find(x => x.key === key);
+  showToast("Used: " + item.name);
+}
+
 /* ================= TABS ================= */
 document.querySelectorAll(".tab").forEach(tab => {
   tab.onclick = () => {
@@ -711,6 +846,7 @@ setInterval(() => {
   tickRegen();
   renderHeader();
   renderSkills(); // keep cast-button enabled state fresh as MP regenerates
+  renderItems(); // keep potion Use buttons fresh as HP/MP regenerate
 
   if (state.hp / state.hpMax < 0.3 && !state._tenacityFired) {
     state._tenacityFired = true;
@@ -728,6 +864,7 @@ function renderAll() {
   renderQuests();
   renderSkills();
   renderTitles();
+  renderItems();
 }
 renderAll();
 

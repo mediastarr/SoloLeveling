@@ -304,11 +304,11 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
   </div>
 
   <div class="tabs">
-    <div class="tab active" data-pane="status">STATUS</div>
-    <div class="tab" data-pane="quests">QUEST</div>
-    <div class="tab" data-pane="skills">SKILLS</div>
-    <div class="tab" data-pane="titles">TITLES</div>
-    <div class="tab" data-pane="items">ITEMS</div>
+    <div class="tab active" data-pane="status" tabindex="0">STATUS</div>
+    <div class="tab" data-pane="quests" tabindex="0">QUEST</div>
+    <div class="tab" data-pane="skills" tabindex="0">SKILLS</div>
+    <div class="tab" data-pane="titles" tabindex="0">TITLES</div>
+    <div class="tab" data-pane="items" tabindex="0">ITEMS</div>
   </div>
 
   <div class="body">
@@ -881,6 +881,32 @@ function useItem(key) {
   const item = SHOP_ITEMS.find(x => x.key === key);
   showToast("Used: " + item.name);
 }
+
+/* ================= FOCUS NAVIGATION: ARROW-KEY MOVEMENT ================= */
+// Browsers only auto-advance focus on Tab — never on ArrowUp/ArrowDown.
+// The Neural Band's "navigate down/up" gesture sends arrow-key events, so
+// without this, focus never moves at all in response to them. This walks
+// every tabindex="0" element inside the currently active pane (plus the
+// tab bar itself) in visual order and moves focus explicitly.
+function getFocusables() {
+  const active = document.querySelector(".pane.active");
+  if (!active) return [];
+  return [...active.querySelectorAll('[tabindex="0"]')].filter(el => el.offsetParent !== null);
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+  const list = getFocusables();
+  if (!list.length) return;
+  const cur = list.indexOf(document.activeElement);
+  let next;
+  if (cur === -1) next = 0;
+  else next = e.key === "ArrowDown" ? cur + 1 : cur - 1;
+  next = Math.max(0, Math.min(list.length - 1, next));
+  e.preventDefault();
+  list[next].focus();
+  list[next].scrollIntoView({ block: "nearest", behavior: "smooth" });
+});
 
 /* ================= FOCUS NAVIGATION: SELECT GESTURE ================= */
 // Neural Band directional navigation moves focus via tabindex, but a

@@ -123,11 +123,17 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
 /* tabs */
 .tabs { display: flex; gap: 5px; margin-top: 13px; flex-shrink: 0; }
 .tab {
-  flex: 1; text-align: center; font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em;
-  padding: 9px 0; border: 1px solid var(--line-soft); background: rgba(160,190,255,0.03);
+  flex: 1; text-align: center; font-size: 9.8px; font-weight: 700; letter-spacing: 0.01em;
+  padding: 9px 2px; border: 1px solid var(--line-soft); background: rgba(160,190,255,0.03);
   color: var(--ink-dim); touch-action: manipulation; transition: all 0.15s ease; cursor: pointer;
+  position: relative;
 }
 .tab.active { color: var(--ink); border-color: var(--line); background: var(--blue-soft); }
+.notif-badge {
+  position: absolute; top: -6px; right: -4px; min-width: 15px; height: 15px; border-radius: 999px;
+  background: var(--red); color: #fff; font-size: 9px; font-weight: 800; line-height: 15px;
+  text-align: center; padding: 0 3px;
+}
 
 /* body / scroll area */
 .body { flex: 1; min-height: 0; margin-top: 12px; overflow-y: auto; padding-right: 2px; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
@@ -244,6 +250,28 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
 .item-btn.buy { border-color: var(--gold-soft); color: var(--gold); background: var(--gold-soft); }
 .item-btn.disabled { opacity: 0.35; pointer-events: none; background: transparent; color: var(--ink-dim); }
 
+/* -------- NOTICE pane -------- */
+.notice-item { display: flex; gap: 10px; padding: 11px 2px; border-bottom: 1px solid var(--line-soft); }
+.notice-item:last-child { border-bottom: none; }
+.notice-item.unread { background: rgba(93,127,230,0.06); }
+.notice-icon { font-size: 15px; flex-shrink: 0; width: 22px; text-align: center; }
+.notice-body { flex: 1; min-width: 0; }
+.notice-msg { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
+.notice-time { font-size: 10.5px; color: var(--ink-dim); margin-top: 2px; }
+.notice-empty { font-size: 12.5px; color: var(--ink-dim); text-align: center; padding: 20px 0; }
+
+/* -------- tappable Recovery panel -------- */
+.recover-panel { touch-action: manipulation; cursor: pointer; }
+.recover-panel:active { background: rgba(93,127,230,0.08); }
+.recover-action {
+  margin-top: 10px; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 700;
+  border: 1px solid var(--blue-soft); background: var(--blue-soft); color: var(--ink);
+}
+.recover-action.cooldown { opacity: 0.4; border-color: var(--line-soft); background: transparent; color: var(--ink-dim); }
+
+/* -------- bonus quest -------- */
+.bonus-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: var(--gold); border: 1px solid var(--gold-soft); background: var(--gold-soft); padding: 2px 8px; margin-bottom: 8px; display: inline-block; }
+
 /* -------- notification toast (image-4 style) -------- */
 #toast {
   position: absolute; left: 50%; top: 90px; transform: translateX(-50%) translateY(-8px);
@@ -309,6 +337,7 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
     <div class="tab" data-pane="skills" tabindex="0">SKILLS</div>
     <div class="tab" data-pane="titles" tabindex="0">TITLES</div>
     <div class="tab" data-pane="items" tabindex="0">ITEMS</div>
+    <div class="tab" data-pane="notice" tabindex="0">NOTICE<span class="notif-badge" id="notifBadge" style="display:none;"></span></div>
   </div>
 
   <div class="body">
@@ -320,9 +349,10 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
         <div class="sys-title-row"><div class="sys-title">ATTRIBUTES</div></div>
         <div class="stat-grid" id="statList"></div>
       </div>
-      <div class="panel">
+      <div class="panel recover-panel" id="recoverPanel" tabindex="0">
         <div class="sys-title-row"><div class="sys-title">RECOVERY</div></div>
         <div class="regen-note">HP and MP regenerate automatically over time. Higher <b>VIT</b> speeds HP recovery; higher <b>INT</b> speeds MP recovery. Both fully restore on a new day.</div>
+        <div class="recover-action" id="recoverAction">Rest Now — restore 25% HP/MP</div>
       </div>
     </div>
 
@@ -330,9 +360,10 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
     <div class="pane" id="pane-quests">
       <div class="panel">
         <div class="sys-title-row"><div class="sys-title">QUEST INFO</div></div>
-        <div class="quest-msg">[Daily Quest: Player Training has arrived]</div>
+        <div class="quest-msg" id="questThemeMsg">[Daily Quest: Player Training has arrived.]</div>
         <div class="sys-hr"></div>
         <div id="questList"></div>
+        <div id="bonusQuestWrap" style="display:none;"></div>
         <div class="sys-hr"></div>
         <div class="penalty-warn"><b>WARNING</b>: Failure to complete the daily quest will result in an appropriate <b>penalty</b>.</div>
         <div class="countdown-wrap">
@@ -372,6 +403,12 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
         <div class="sys-title-row"><div class="sys-title">SHOP</div></div>
         <div id="shopList"></div>
       </div>
+    </div>
+
+    <!-- NOTICE -->
+    <div class="pane" id="pane-notice">
+      <div class="sys-title-row"><div class="sys-title">NOTIFICATIONS</div></div>
+      <div id="noticeList"></div>
     </div>
 
   </div>
@@ -429,6 +466,17 @@ const SHOP_ITEMS = [
   { key: "expscroll", icon: "📜", name: "EXP Scroll", desc: "Grants 30 bonus EXP", cost: 100, minLevel: 5 }
 ];
 
+const QUEST_THEMES = ["Strength Training", "Player Training", "Endurance Training", "Combat Conditioning", "Physical Training"];
+
+const BONUS_QUEST_POOL = [
+  { name: "Extra Push-ups", target: 50, unit: "" },
+  { name: "Extra Run", target: 2, unit: "km" },
+  { name: "Cold Shower", target: 1, unit: "" },
+  { name: "Read 10 Pages", target: 10, unit: "pg" },
+  { name: "Meditate", target: 10, unit: "min" },
+  { name: "Extra Squats", target: 50, unit: "" }
+];
+
 function defaultState() {
   const stats = {};
   STAT_DEFS.forEach(s => stats[s.key] = 10);
@@ -440,7 +488,11 @@ function defaultState() {
     statPoints: 3, stats,
     questDate: todayKey(), quests, questsCompletedTotal: 0, questStreak: 0,
     skillUses: {}, equippedTitle: null, selectedSkill: null,
-    lastTick: Date.now(), gold: 0, inventory: {}
+    lastTick: Date.now(), gold: 0, inventory: {},
+    notifications: [], recoverCooldownUntil: 0,
+    bonusQuest: null, bonusQuestsToday: 0, unlockedItemKeys: [],
+    questTheme: QUEST_THEMES[Math.floor(Math.random() * QUEST_THEMES.length)],
+    _newDayNotified: false
   };
 }
 
@@ -468,6 +520,10 @@ function loadState() {
       s.hp = s.hpMax;
       s.mp = s.mpMax;
       s._streakCountedToday = false;
+      s.bonusQuest = null;
+      s.bonusQuestsToday = 0;
+      s.questTheme = QUEST_THEMES[Math.floor(Math.random() * QUEST_THEMES.length)];
+      s._newDayNotified = false;
     }
     return s;
   } catch(e) { return defaultState(); }
@@ -484,6 +540,67 @@ function showToast(msg) {
   t.classList.add("show");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+}
+
+/* ================= NOTIFICATIONS ================= */
+// Logs a persistent entry AND pops the transient toast, so the message
+// both flashes immediately and stays reachable later in the Notice tab.
+function addNotification(type, msg) {
+  state.notifications.unshift({ type, msg, time: Date.now(), read: false });
+  if (state.notifications.length > 60) state.notifications.length = 60;
+  save();
+  showToast(msg);
+  renderNoticeBadge();
+  if (document.querySelector('.pane.active')?.id === "pane-notice") renderNotice();
+}
+
+function renderNoticeBadge() {
+  const unread = state.notifications.filter(n => !n.read).length;
+  const badge = document.getElementById("notifBadge");
+  if (!badge) return;
+  if (unread > 0) { badge.style.display = "block"; badge.textContent = unread > 9 ? "9+" : unread; }
+  else badge.style.display = "none";
+}
+
+function notifIcon(type) {
+  if (type === "quest") return "📜";
+  if (type === "complete") return "✅";
+  if (type === "item") return "🎁";
+  if (type === "level") return "⬆";
+  return "•";
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return m + "m ago";
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + "h ago";
+  return Math.floor(h / 24) + "d ago";
+}
+
+function renderNotice() {
+  const list = document.getElementById("noticeList");
+  list.innerHTML = "";
+  if (!state.notifications.length) {
+    list.innerHTML = `<div class="notice-empty">No notifications yet — quest updates and unlocks will appear here.</div>`;
+    return;
+  }
+  state.notifications.forEach(n => {
+    const row = document.createElement("div");
+    row.className = "notice-item" + (n.read ? "" : " unread");
+    row.innerHTML = `
+      <div class="notice-icon">${notifIcon(n.type)}</div>
+      <div class="notice-body">
+        <div class="notice-msg">${n.msg}</div>
+        <div class="notice-time">${timeAgo(n.time)}</div>
+      </div>`;
+    list.appendChild(row);
+  });
+  state.notifications.forEach(n => n.read = true);
+  save();
+  renderNoticeBadge();
 }
 
 /* ================= HP/MP LIVE REGEN ================= */
@@ -517,6 +634,37 @@ function renderHeader() {
   document.getElementById("rankMeta").textContent = rank;
   const t = state.equippedTitle ? TITLES.find(x => x.key === state.equippedTitle) : null;
   document.getElementById("titleMeta").textContent = t ? t.name : "None";
+}
+
+/* ================= ACTIVE RECOVERY (tap to rest) ================= */
+const RECOVER_COOLDOWN_MS = 60000; // 60s between uses
+function activeRecover() {
+  if (Date.now() < state.recoverCooldownUntil) {
+    showToast("Recovery not ready yet");
+    return;
+  }
+  const hpGain = Math.round(state.hpMax * 0.25);
+  const mpGain = Math.round(state.mpMax * 0.25);
+  state.hp = Math.min(state.hpMax, state.hp + hpGain);
+  state.mp = Math.min(state.mpMax, state.mp + mpGain);
+  state.recoverCooldownUntil = Date.now() + RECOVER_COOLDOWN_MS;
+  save();
+  renderHeader();
+  updateRecoverButton();
+  showToast("Recovered +" + hpGain + " HP, +" + mpGain + " MP");
+}
+
+function updateRecoverButton() {
+  const btn = document.getElementById("recoverAction");
+  if (!btn) return;
+  const remaining = state.recoverCooldownUntil - Date.now();
+  if (remaining > 0) {
+    btn.classList.add("cooldown");
+    btn.textContent = "Recovering... " + Math.ceil(remaining / 1000) + "s";
+  } else {
+    btn.classList.remove("cooldown");
+    btn.textContent = "Rest Now — restore 25% HP/MP";
+  }
 }
 
 /* ================= RENDER: STATUS ================= */
@@ -557,10 +705,17 @@ function renderStatus() {
       showToast("+1 " + STAT_DEFS.find(s=>s.key===key).full);
     };
   });
+
+  const recoverPanel = document.getElementById("recoverPanel");
+  if (recoverPanel) recoverPanel.onclick = () => activeRecover();
+  updateRecoverButton();
 }
 
 /* ================= RENDER: QUESTS ================= */
 function renderQuests() {
+  const themeEl = document.getElementById("questThemeMsg");
+  if (themeEl) themeEl.textContent = "[Daily Quest: " + state.questTheme + " has arrived.]";
+
   const list = document.getElementById("questList");
   list.innerHTML = "";
   DAILY_QUESTS.forEach(q => {
@@ -584,6 +739,29 @@ function renderQuests() {
   list.querySelectorAll("[data-dec]").forEach(btn => {
     btn.onclick = () => adjustQuest(btn.dataset.dec, -getStep(btn.dataset.dec));
   });
+
+  // Bonus quest — only shown once the main Daily Quest is fully cleared
+  const bonusWrap = document.getElementById("bonusQuestWrap");
+  if (state.bonusQuest) {
+    const bq = state.bonusQuest;
+    const isDone = bq.current >= bq.target;
+    bonusWrap.style.display = "block";
+    bonusWrap.innerHTML = `
+      <div class="bonus-tag">BONUS QUEST</div>
+      <div class="quest">
+        <div class="q-name ${isDone?'done':''}">${bq.name}</div>
+        <div class="q-right">
+          <div class="q-icon-btn q-minus" data-bonus-dec tabindex="0">−</div>
+          <div class="q-frac mono">[${bq.current}/${bq.target}${bq.unit?bq.unit:''}]</div>
+          <div class="q-icon-btn ${isDone?'done':''}" data-bonus-inc tabindex="0">${isDone?'✓':'+'}</div>
+        </div>
+      </div>`;
+    bonusWrap.querySelector("[data-bonus-inc]").onclick = () => adjustBonusQuest(+1);
+    bonusWrap.querySelector("[data-bonus-dec]").onclick = () => adjustBonusQuest(-1);
+  } else {
+    bonusWrap.style.display = "none";
+    bonusWrap.innerHTML = "";
+  }
 }
 function getStep(key) { return key === "run" ? 1 : 10; }
 
@@ -597,19 +775,55 @@ function adjustQuest(key, delta) {
     grantEXP(15);
     state.gold += 20;
     state.questsCompletedTotal++;
-    showToast("Quest complete: " + q.name + " (+15 EXP, +20 Gold)");
+    addNotification("complete", "[Quest Complete: " + q.name + " — +15 EXP, +20 Gold]");
   }
   const allDone = DAILY_QUESTS.every(x => (state.quests[x.key]||0) >= x.target);
   if (allDone && !state._streakCountedToday) {
     state.questStreak++;
     state._streakCountedToday = true;
-    showToast("Daily Quest cleared — streak: " + state.questStreak);
+    addNotification("complete", "[Daily Quest Cleared — Streak: " + state.questStreak + "]");
+    offerBonusQuest();
   }
   save();
   renderQuests();
   renderHeader();
   renderSkills();
   renderTitles();
+}
+
+/* ================= BONUS QUEST CHAIN ================= */
+// After the main Daily Quest is cleared, offer one bonus objective.
+// Completing it grants EXP/Gold and immediately offers another —
+// this is the "offering quests when previous quest is done" chain.
+// Capped per day so it can't be farmed infinitely.
+const MAX_BONUS_PER_DAY = 3;
+function offerBonusQuest() {
+  if (state.bonusQuest) return;
+  if (state.bonusQuestsToday >= MAX_BONUS_PER_DAY) return;
+  const pick = BONUS_QUEST_POOL[Math.floor(Math.random() * BONUS_QUEST_POOL.length)];
+  state.bonusQuest = { name: pick.name, target: pick.target, unit: pick.unit, current: 0 };
+  save();
+  addNotification("quest", "[Bonus Quest: " + pick.name + " has arrived.]");
+  renderQuests();
+}
+
+function adjustBonusQuest(delta) {
+  if (!state.bonusQuest) return;
+  const bq = state.bonusQuest;
+  const step = bq.unit === "km" ? 1 : (bq.unit === "min" || bq.unit === "pg") ? 5 : 10;
+  bq.current = Math.max(0, Math.min(bq.target, bq.current + (delta > 0 ? step : -step)));
+  save();
+  if (bq.current >= bq.target) {
+    grantEXP(25);
+    state.gold += 35;
+    state.bonusQuestsToday++;
+    addNotification("complete", "[Bonus Quest Complete: " + bq.name + " — +25 EXP, +35 Gold]");
+    state.bonusQuest = null;
+    save();
+    offerBonusQuest();
+  }
+  renderQuests();
+  renderHeader();
 }
 
 /* ================= COUNTDOWN TO DAILY RESET ================= */
@@ -635,12 +849,24 @@ function grantEXP(amount) {
     state.hpMax += 10; state.hp = state.hpMax;
     state.mpMax += 10; state.mp = state.mpMax;
     state.gold += 50;
-    showToast("LEVEL UP — now Lv." + state.level + " (+50 Gold)");
+    addNotification("level", "[Level Up: Lv." + state.level + " — +50 Gold, +3 Ability Points]");
+    checkItemUnlocks();
   }
   save();
   renderHeader();
   renderStatus();
   renderTitles();
+}
+
+// Fires a notification the moment a shop item's level requirement is
+// actually reached, instead of only discovering it by browsing the Shop.
+function checkItemUnlocks() {
+  SHOP_ITEMS.forEach(item => {
+    if (state.level >= item.minLevel && !state.unlockedItemKeys.includes(item.key)) {
+      state.unlockedItemKeys.push(item.key);
+      addNotification("item", "[Item Unlocked: " + item.name + "]");
+    }
+  });
 }
 
 /* ================= SKILLS ================= */
@@ -930,6 +1156,7 @@ document.querySelectorAll(".tab").forEach(tab => {
     document.querySelectorAll(".pane").forEach(p => p.classList.remove("active"));
     tab.classList.add("active");
     document.getElementById("pane-" + tab.dataset.pane).classList.add("active");
+    if (tab.dataset.pane === "notice") renderNotice();
   };
 });
 
@@ -941,6 +1168,7 @@ setInterval(() => {
     updateSkillsLive();
     updateItemsLive();
     updateCountdown();
+    updateRecoverButton();
 
     if (state.hp / state.hpMax < 0.3 && !state._tenacityFired) {
       state._tenacityFired = true;
@@ -961,6 +1189,28 @@ function renderAll() {
   renderTitles();
   renderItems();
   updateCountdown();
+  renderNoticeBadge();
+
+  // Fire the "new quest has arrived" notification exactly once per day —
+  // matches the reference format: [Daily Quest: X has arrived.]
+  if (state._newDayNotified === false) {
+    addNotification("quest", "[Daily Quest: " + state.questTheme + " has arrived.]");
+    state._newDayNotified = true;
+    save();
+  }
+
+  // Seed already-unlocked items silently on first load after this update,
+  // so existing saves don't get a flood of "unlocked" notifications for
+  // items their level already qualifies for.
+  if (!state._itemsSeeded) {
+    SHOP_ITEMS.forEach(item => {
+      if (state.level >= item.minLevel && !state.unlockedItemKeys.includes(item.key)) {
+        state.unlockedItemKeys.push(item.key);
+      }
+    });
+    state._itemsSeeded = true;
+    save();
+  }
 }
 
 setTimeout(() => { const b = document.getElementById("boot"); if (b) b.classList.add("hide"); }, 2400);

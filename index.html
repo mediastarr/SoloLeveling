@@ -1269,13 +1269,20 @@ function getFocusables() {
 }
 
 document.addEventListener("keydown", (e) => {
-  if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+  // On this hardware, a physical swipe up/down apparently emits
+  // ArrowLeft/ArrowRight key codes rather than ArrowUp/ArrowDown (a
+  // device-level mapping quirk, not something this page controls). Treat
+  // Up+Left as "previous" and Down+Right as "next" so navigation works
+  // correctly regardless of which pair the gesture actually sends.
+  const isNext = e.key === "ArrowDown" || e.key === "ArrowRight";
+  const isPrev = e.key === "ArrowUp" || e.key === "ArrowLeft";
+  if (!isNext && !isPrev) return;
   const list = getFocusables();
   if (!list.length) return;
   const cur = list.indexOf(document.activeElement);
   let next;
   if (cur === -1) next = 0;
-  else next = e.key === "ArrowDown" ? cur + 1 : cur - 1;
+  else next = isNext ? cur + 1 : cur - 1;
   next = Math.max(0, Math.min(list.length - 1, next));
   e.preventDefault();
   list[next].focus();

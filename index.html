@@ -172,18 +172,27 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
 /* -------- QUESTS pane -------- */
 .quest-msg { font-size: 12.5px; color: var(--ink-dim); text-align: center; margin-bottom: 12px; }
 .quest {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 10px 2px; border-bottom: 1px solid var(--line-soft);
+  padding: 11px 2px; border-bottom: 1px solid var(--line-soft);
 }
 .quest:last-child { border-bottom: none; }
+.quest-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .q-name { font-size: 15px; font-weight: 600; }
 .q-name.done { color: var(--ink-dim); }
 .q-right { display: flex; align-items: center; gap: 8px; }
 .q-frac { font-size: 13px; color: var(--ink-dim); }
+.quest-progress-track { height: 5px; border: 1px solid var(--line-soft); background: rgba(255,255,255,0.03); margin: 7px 0 8px; overflow: hidden; }
+.quest-progress-fill { height: 100%; background: var(--blue); transition: width 0.3s ease; }
+.tap-log-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tap-log-btn {
+  flex: 1; min-width: 40px; text-align: center; padding: 7px 0; border: 1px solid var(--blue-soft);
+  background: var(--blue-soft); color: var(--ink); font-size: 12px; font-weight: 700;
+  touch-action: manipulation;
+}
+.tap-log-btn:active { background: rgba(93,127,230,0.4); }
 .q-icon-btn {
   width: 26px; height: 26px; border: 1px solid var(--line); display: flex; align-items: center;
   justify-content: center; font-size: 15px; font-weight: 700; touch-action: manipulation;
-  background: rgba(160,190,255,0.05); color: var(--ink);
+  background: rgba(160,190,255,0.05); color: var(--ink); flex-shrink: 0;
 }
 .q-icon-btn.done { border-color: var(--green); color: var(--green); background: var(--green-soft); }
 .q-minus { width: 22px; height: 22px; font-size: 13px; opacity: 0.7; }
@@ -371,6 +380,11 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
           <div class="countdown mono" id="countdownNum">--:--:--</div>
         </div>
       </div>
+      <div class="panel">
+        <div class="sys-title-row"><div class="sys-title">WEEKLY QUEST</div></div>
+        <div id="weeklyList"></div>
+        <div class="recover-action" id="weeklyClaimBtn" tabindex="0" style="display:none;">Claim Weekly Reward</div>
+      </div>
     </div>
 
     <!-- SKILLS -->
@@ -391,6 +405,8 @@ svg.ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-wid
     <div class="pane" id="pane-titles">
       <div class="sys-title-row"><div class="sys-title">TITLES</div></div>
       <div id="titleList"></div>
+      <div class="sys-title-row" style="margin-top:16px;"><div class="sys-title">ACHIEVEMENTS</div></div>
+      <div id="achievementList"></div>
     </div>
 
     <!-- ITEMS -->
@@ -468,6 +484,12 @@ const SHOP_ITEMS = [
 
 const QUEST_THEMES = ["Strength Training", "Player Training", "Endurance Training", "Combat Conditioning", "Physical Training"];
 
+const WEEKLY_QUESTS = [
+  { key: "wk_pushups", name: "Weekly Push-ups", target: 500, unit: "" },
+  { key: "wk_run", name: "Weekly Distance", target: 30, unit: "km" },
+  { key: "wk_clears", name: "Daily Quests Cleared", target: 5, unit: "" }
+];
+
 const BONUS_QUEST_POOL = [
   { name: "Extra Push-ups", target: 50, unit: "" },
   { name: "Extra Run", target: 2, unit: "km" },
@@ -492,8 +514,17 @@ function defaultState() {
     notifications: [], recoverCooldownUntil: 0,
     bonusQuest: null, bonusQuestsToday: 0, unlockedItemKeys: [],
     questTheme: QUEST_THEMES[Math.floor(Math.random() * QUEST_THEMES.length)],
-    _newDayNotified: false
+    _newDayNotified: false,
+    weekKey: weekKey(), weekly: { wk_pushups: 0, wk_run: 0, wk_clears: 0 }, weeklyClaimed: false,
+    achievements: []
   };
+}
+
+function weekKey() {
+  const d = new Date();
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil((((d - jan1) / 86400000) + jan1.getDay() + 1) / 7);
+  return d.getFullYear() + "-W" + week;
 }
 
 function todayKey() { return new Date().toISOString().slice(0,10); }
@@ -510,8 +541,14 @@ function loadState() {
     });
     STAT_DEFS.forEach(def => { if (s.stats[def.key] === undefined) s.stats[def.key] = fallback.stats[def.key]; });
     DAILY_QUESTS.forEach(q => { if (s.quests[q.key] === undefined) s.quests[q.key] = 0; });
+    WEEKLY_QUESTS.forEach(q => { if (s.weekly[q.key] === undefined) s.weekly[q.key] = 0; });
 
     if (s.lastTick === undefined) s.lastTick = Date.now();
+    if (s.weekKey !== weekKey()) {
+      s.weekKey = weekKey();
+      WEEKLY_QUESTS.forEach(q => s.weekly[q.key] = 0);
+      s.weeklyClaimed = false;
+    }
     if (s.questDate !== todayKey()) {
       const allDone = DAILY_QUESTS.every(q => (s.quests[q.key]||0) >= q.target);
       if (!allDone) { s.questStreak = 0; }
@@ -721,14 +758,19 @@ function renderQuests() {
   DAILY_QUESTS.forEach(q => {
     const val = state.quests[q.key] || 0;
     const isDone = val >= q.target;
+    const steps = getLogSteps(q.key);
     const row = document.createElement("div");
     row.className = "quest";
     row.innerHTML = `
-      <div class="q-name ${isDone?'done':''}">${q.name}</div>
-      <div class="q-right">
-        <div class="q-icon-btn q-minus" data-dec="${q.key}" tabindex="0">−</div>
+      <div class="quest-top">
+        <div class="q-name ${isDone?'done':''}">${q.name}</div>
         <div class="q-frac mono">[${val}/${q.target}${q.unit?q.unit:''}]</div>
-        <div class="q-icon-btn ${isDone?'done':''}" data-inc="${q.key}" tabindex="0">${isDone?'✓':'+'}</div>
+      </div>
+      <div class="quest-progress-track"><div class="quest-progress-fill" style="width:${Math.min(100, val/q.target*100)}%"></div></div>
+      <div class="tap-log-row">
+        <div class="q-icon-btn q-minus" data-dec="${q.key}" tabindex="0">−</div>
+        ${steps.map(s => `<div class="tap-log-btn" data-loginc="${q.key}" data-amt="${s}" tabindex="0">+${s}${q.unit==='km'?'km':''}</div>`).join('')}
+        <div class="q-icon-btn ${isDone?'done':''}" data-inc="${q.key}" tabindex="0">${isDone?'✓':'+1'}</div>
       </div>`;
     list.appendChild(row);
   });
@@ -738,6 +780,9 @@ function renderQuests() {
   });
   list.querySelectorAll("[data-dec]").forEach(btn => {
     btn.onclick = () => adjustQuest(btn.dataset.dec, -getStep(btn.dataset.dec));
+  });
+  list.querySelectorAll("[data-loginc]").forEach(btn => {
+    btn.onclick = () => adjustQuest(btn.dataset.loginc, +parseFloat(btn.dataset.amt));
   });
 
   // Bonus quest — only shown once the main Daily Quest is fully cleared
@@ -764,12 +809,21 @@ function renderQuests() {
   }
 }
 function getStep(key) { return key === "run" ? 1 : 10; }
+// Arise-style "Tap-to-Log": quick preset buttons for logging a completed
+// set immediately, sized appropriately per quest type.
+function getLogSteps(key) { return key === "run" ? [1, 2, 5] : [5, 10, 20]; }
 
 function adjustQuest(key, delta) {
   const q = DAILY_QUESTS.find(x => x.key === key);
   const wasDone = (state.quests[key]||0) >= q.target;
   state.quests[key] = Math.max(0, Math.min(q.target, (state.quests[key]||0) + delta));
   const nowDone = state.quests[key] >= q.target;
+
+  // Feed real forward progress into the matching Weekly Quest, if one tracks it
+  if (delta > 0) {
+    if (key === "pushups") addWeeklyProgress("wk_pushups", delta);
+    if (key === "run") addWeeklyProgress("wk_run", delta);
+  }
 
   if (!wasDone && nowDone) {
     grantEXP(15);
@@ -782,6 +836,8 @@ function adjustQuest(key, delta) {
     state.questStreak++;
     state._streakCountedToday = true;
     addNotification("complete", "[Daily Quest Cleared — Streak: " + state.questStreak + "]");
+    addWeeklyProgress("wk_clears", 1);
+    checkAchievements();
     offerBonusQuest();
   }
   save();
@@ -791,7 +847,83 @@ function adjustQuest(key, delta) {
   renderTitles();
 }
 
-/* ================= BONUS QUEST CHAIN ================= */
+/* ================= WEEKLY QUESTS ================= */
+function addWeeklyProgress(key, amount) {
+  const q = WEEKLY_QUESTS.find(x => x.key === key);
+  if (!q) return;
+  const was = state.weekly[key] >= q.target;
+  state.weekly[key] = Math.min(q.target, (state.weekly[key] || 0) + amount);
+  const now = state.weekly[key] >= q.target;
+  if (!was && now) addNotification("complete", "[Weekly Quest Complete: " + q.name + "]");
+  save();
+  renderWeekly();
+}
+
+function renderWeekly() {
+  const wrap = document.getElementById("weeklyList");
+  if (!wrap) return;
+  const allDone = WEEKLY_QUESTS.every(q => state.weekly[q.key] >= q.target);
+  wrap.innerHTML = WEEKLY_QUESTS.map(q => {
+    const val = state.weekly[q.key] || 0;
+    const isDone = val >= q.target;
+    return `
+      <div class="quest">
+        <div class="quest-top">
+          <div class="q-name ${isDone?'done':''}">${q.name}</div>
+          <div class="q-frac mono">[${val}/${q.target}${q.unit?q.unit:''}]</div>
+        </div>
+        <div class="quest-progress-track"><div class="quest-progress-fill" style="width:${Math.min(100, val/q.target*100)}%; ${isDone?'background:var(--green);':''}"></div></div>
+      </div>`;
+  }).join('');
+  const claimBtn = document.getElementById("weeklyClaimBtn");
+  if (claimBtn) {
+    if (allDone && !state.weeklyClaimed) {
+      claimBtn.style.display = "block";
+      claimBtn.classList.remove("disabled");
+      claimBtn.textContent = "Claim Weekly Reward — +150 EXP, +200 Gold";
+    } else if (state.weeklyClaimed) {
+      claimBtn.style.display = "block";
+      claimBtn.classList.add("disabled");
+      claimBtn.textContent = "Weekly Reward Claimed ✓";
+    } else {
+      claimBtn.style.display = "none";
+    }
+  }
+}
+
+function claimWeeklyReward() {
+  const allDone = WEEKLY_QUESTS.every(q => state.weekly[q.key] >= q.target);
+  if (!allDone || state.weeklyClaimed) return;
+  grantEXP(150);
+  state.gold += 200;
+  state.weeklyClaimed = true;
+  save();
+  addNotification("complete", "[Weekly Reward Claimed — +150 EXP, +200 Gold]");
+  renderWeekly();
+  renderHeader();
+}
+
+/* ================= ACHIEVEMENTS ================= */
+const ACHIEVEMENT_DEFS = [
+  { key: "streak7", name: "7-Day Streak", desc: "Clear the Daily Quest 7 days in a row", check: s => s.questStreak >= 7 },
+  { key: "streak30", name: "30-Day Streak", desc: "Clear the Daily Quest 30 days in a row", check: s => s.questStreak >= 30 },
+  { key: "lvl10", name: "Double Digits", desc: "Reach Level 10", check: s => s.level >= 10 },
+  { key: "lvl25", name: "Quarter Century", desc: "Reach Level 25", check: s => s.level >= 25 },
+  { key: "quests50", name: "Half Century", desc: "Complete 50 quests total", check: s => s.questsCompletedTotal >= 50 },
+  { key: "weekly1", name: "Weekly Warrior", desc: "Claim your first Weekly Reward", check: s => s.weeklyClaimed }
+];
+
+function checkAchievements() {
+  ACHIEVEMENT_DEFS.forEach(a => {
+    if (!state.achievements.includes(a.key) && a.check(state)) {
+      state.achievements.push(a.key);
+      addNotification("item", "[Achievement Unlocked: " + a.name + "]");
+    }
+  });
+  save();
+}
+
+
 // After the main Daily Quest is cleared, offer one bonus objective.
 // Completing it grants EXP/Gold and immediately offers another —
 // this is the "offering quests when previous quest is done" chain.
@@ -851,6 +983,7 @@ function grantEXP(amount) {
     state.gold += 50;
     addNotification("level", "[Level Up: Lv." + state.level + " — +50 Gold, +3 Ability Points]");
     checkItemUnlocks();
+    checkAchievements();
   }
   save();
   renderHeader();
@@ -1011,6 +1144,21 @@ function renderTitles() {
       showToast(state.equippedTitle ? "Title equipped: " + TITLES.find(t=>t.key===key).name : "Title unequipped");
     };
   });
+
+  const achList = document.getElementById("achievementList");
+  if (achList) {
+    achList.innerHTML = ACHIEVEMENT_DEFS.map(a => {
+      const unlocked = state.achievements.includes(a.key);
+      return `
+        <div class="title-card${unlocked?'':' locked'}" style="${unlocked?'border-color:var(--green-soft);background:var(--green-soft);':''}">
+          <div class="title-icon">${unlocked?"🏅":"🔒"}</div>
+          <div class="title-info">
+            <div class="title-name">${a.name}</div>
+            <div class="title-bonus">${a.desc}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
 }
 
 /* ================= ITEMS: INVENTORY (grid) + SHOP (list) ================= */
@@ -1185,11 +1333,15 @@ function renderAll() {
   renderHeader();
   renderStatus();
   renderQuests();
+  renderWeekly();
   renderSkills();
   renderTitles();
   renderItems();
   updateCountdown();
   renderNoticeBadge();
+
+  const claimBtn = document.getElementById("weeklyClaimBtn");
+  if (claimBtn) claimBtn.onclick = () => claimWeeklyReward();
 
   // Fire the "new quest has arrived" notification exactly once per day —
   // matches the reference format: [Daily Quest: X has arrived.]
